@@ -1,6 +1,7 @@
-var express = require("express");
-var app = express();
-var bodyParser = require("body-parser");
+var express = require("express"),
+    app = express(),
+    bodyParser = require("body-parser"),
+    mongoose = require("mongoose")
 
 var campgrounds = [
     {name:"Acampamento sombra da mata", image:"https://farm2.staticflickr.com/1086/882244782_d067df2717.jpg"},
@@ -20,16 +21,30 @@ var campgrounds = [
     {name:"Acampamento da montanha do Capiroto", image:"https://farm1.staticflickr.com/82/225912054_690e32830d.jpg"}
 ] 
 
+
+mongoose.connect("mongodb://localhost/yelp_camp", { useNewUrlParser: true });
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 
+//SCHEMA
+var campgroudSchema = new mongoose.Schema({
+    name: String,
+    image: String
+})
+var Campground = mongoose.model("Campground", campgroudSchema);
+
+//EXPRESS
 
 app.get("/", function(req, res){
     res.render("landing");
 });
 
 app.get("/campgrounds", function(req, res){
-    res.render("campgrounds", {campgrounds:campgrounds});
+    
+    var campgroundsList = listAllCampgrounds(function(campgroudsList){
+        res.render("campgrounds", {campgrounds:campgroundsList});
+    })
+    
 });
 
 app.get("/campgrounds/new", function(req, res){
@@ -44,10 +59,35 @@ app.post("/campgrounds", function(req, res){
         name: name,
         image: image
     }
+    
     campgrounds.push(newCampground);
+    insertCampground(newCampground);
     res.redirect("/campgrounds");
 });
 
 app.listen(process.env.PORT, process.env.IP, function(){
     console.log("YelpCamp server has started");
 });
+
+
+//Create a campground
+function insertCampground(campgroud){
+    Campground.create(campgroud, function(err, campgroud) {
+        if(err){
+            console.log("Fail to insert: " + err);
+        }else{
+            console.log("New campgroud created!");
+        }
+    })
+}
+
+//List all campgrounds
+function listAllCampgrounds(functionList){
+    Campground.find({}, function(err, campgrounds){
+        if(err){
+            console.log("Something went wrong");
+        }else{
+            functionList(campgrounds);
+        }
+    });
+}
