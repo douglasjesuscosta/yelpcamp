@@ -3,7 +3,7 @@ var express = require("express"),
     bodyParser = require("body-parser"),
     mongoose = require("mongoose")
 
-var campgrounds = [
+/*var campgrounds = [
     {name:"Acampamento sombra da mata", image:"https://farm2.staticflickr.com/1086/882244782_d067df2717.jpg"},
     {name:"Acampamento da Xuxa", image:"https://farm5.staticflickr.com/4033/4306518513_f35ecd90b5.jpg"},
     {name:"Acampamento da montanha do Capiroto", image:"https://farm1.staticflickr.com/82/225912054_690e32830d.jpg"},
@@ -20,7 +20,7 @@ var campgrounds = [
     {name:"Acampamento da Xuxa", image:"https://farm5.staticflickr.com/4033/4306518513_f35ecd90b5.jpg"},
     {name:"Acampamento da montanha do Capiroto", image:"https://farm1.staticflickr.com/82/225912054_690e32830d.jpg"}
 ] 
-
+*/
 
 mongoose.connect("mongodb://localhost/yelp_camp", { useNewUrlParser: true });
 app.set("view engine", "ejs");
@@ -41,14 +41,18 @@ app.get("/", function(req, res){
 
 app.get("/campgrounds", function(req, res){
     
-    var campgroundsList = listAllCampgrounds(function(campgroudsList){
-        res.render("campgrounds", {campgrounds:campgroundsList});
+    var campgroundsList = listAllCampgrounds(function(campgrounds){
+        res.render("index", {campgrounds:campgrounds});
     })
     
 });
 
+app.get("/campgrounds/:id", function(req, res) {
+    res.render("showCamp");
+})
+
 app.get("/campgrounds/new", function(req, res){
-    res.render("newCamp.ejs");
+    res.render("newCamp");
 });
 
 app.post("/campgrounds", function(req, res){
@@ -59,10 +63,8 @@ app.post("/campgrounds", function(req, res){
         name: name,
         image: image
     }
-    
-    campgrounds.push(newCampground);
     insertCampground(newCampground);
-    res.redirect("/campgrounds");
+    res.redirect("index");
 });
 
 app.listen(process.env.PORT, process.env.IP, function(){
@@ -87,6 +89,7 @@ function listAllCampgrounds(functionList){
         if(err){
             console.log("Something went wrong");
         }else{
+            console.log(campgrounds);
             functionList(campgrounds);
         }
     });
