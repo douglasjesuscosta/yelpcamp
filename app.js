@@ -29,45 +29,48 @@ app.use(bodyParser.urlencoded({extended: true}));
 //SCHEMA
 var campgroudSchema = new mongoose.Schema({
     name: String,
-    image: String
+    image: String,
+    description: String
 })
 var Campground = mongoose.model("Campground", campgroudSchema);
 
-//EXPRESS
 
+//EXPRESS
 app.get("/", function(req, res){
     res.render("landing");
 });
 
 app.get("/campgrounds", function(req, res){
-    
-    var campgroundsList = listAllCampgrounds(function(campgrounds){
+    listAllCampgrounds(function(campgrounds){
         res.render("index", {campgrounds:campgrounds});
     })
-    
 });
-
-app.get("/campgrounds/:id", function(req, res) {
-    res.render("showCamp");
-})
 
 app.get("/campgrounds/new", function(req, res){
     res.render("newCamp");
 });
 
+app.get("/campgrounds/:id", function(req, res) {
+    findCamp(req.params.id, function(campground){
+        res.render("showCamp", {campground:campground});
+    });
+});
+
 app.post("/campgrounds", function(req, res){
     var name = req.body.name;
     var image = req.body.image;
+    var desc = req.body.description;
 
     var newCampground = {
         name: name,
-        image: image
+        image: image,
+        description: desc
     }
     insertCampground(newCampground);
-    res.redirect("index");
+    res.redirect("/campgrounds");
 });
 
-app.listen(process.env.PORT, process.env.IP, function(){
+app.listen(3000, function(){
     console.log("YelpCamp server has started");
 });
 
@@ -93,4 +96,14 @@ function listAllCampgrounds(functionList){
             functionList(campgrounds);
         }
     });
+}
+
+//Find a specific camp
+function findCamp(idCamp, callBack){
+    Campground.findById(idCamp, function(err, campground){
+        if(!err){
+            callBack(campground);
+        }
+        console.log("Something went wrong");
+    })
 }
